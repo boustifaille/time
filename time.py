@@ -4,7 +4,6 @@ import datetime
 import os, sys
 import time
 import socket
-import tkinter as tk
 from threading import Thread
 import json
 
