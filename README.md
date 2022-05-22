@@ -19,3 +19,6 @@ if you want that the terminal output look prettier
 ```bash
 pip install pyfiglet
 ```
+
+## Changes
+If you want to change the schedule open horaires.json and edit the file like you want
