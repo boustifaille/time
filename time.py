@@ -102,15 +102,21 @@ def h_avantP_calcul() -> datetime.timedelta:
     else:
         if recolteH.heureActuelle < getMidi(): # si c'est le matin
             if recolteH.heureActuelle < recupHoraires()["matin"]["pause"]:
+                # c'est un timedelta il faut le convertir en datetime
                 h_avantP = recolteH.pauseMatin - recolteH.now
+                h_avantP = datetime.datetime.strptime(str(h_avantP), "%H:%M:%S")
+                h_avantP = h_avantP.strftime("%H:%M:%S")
             else :
-                h_avantP = 0
+                h_avantP = '00:00:00'
            
-        elif recolteH.heureActuelle > getMidi(): # si c'est l'après-midi
+        elif recolteH.heureActuelle >= getMidi(): # si c'est l'après-midi
             if recolteH.heureActuelle < recupHoraires()["apres-midi"]["pause"]:
+                # c'est un timedelta il faut le convertir en datetime
                 h_avantP = recolteH.pauseAP - recolteH.now
+                h_avantP = datetime.datetime.strptime(str(h_avantP), "%H:%M:%S")
+                h_avantP = h_avantP.strftime("%H:%M:%S")
             else :
-                h_avantP = 0
+                h_avantP = '00:00:00'
        
 
     return h_avantP
@@ -130,7 +136,8 @@ def recolteH():
     finAPmidi = horaires["apres-midi"]["fin"]
 
     # récolter les heures
-    recolteH.heureActuelle = str(datetime.datetime.now().time().strftime('%H:%M:%S'))
+    recolteH.heureActuelle = datetime.datetime.now().time().strftime('%H:%M:%S')
+    
 
     # formater proprement les heures
     recolteH.now = datetime.datetime.strptime(recolteH.heureActuelle, '%H:%M:%S')# maintenat
