@@ -12,6 +12,7 @@
 		}
 
 	},
-	"jours-ouvrables" : [0, 1, 2, 3, 4]
+	"jours-ouvrables" : [0, 1, 2, 3, 4],
+	"midi" : "12:00:00"
 
 }

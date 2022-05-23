@@ -39,6 +39,14 @@ def joursOuvrables() -> list[int]:
 
     return data["jours-ouvrables"]
 
+def getMidi() -> str:
+    try:
+        with open("horaires.json", "r") as fichier:
+                data = json.load(fichier)
+    except:
+        data = {"midi" : "12:00:00"}
+
+    return data["midi"]
 
 def estConnecte()-> bool:
     """
@@ -51,7 +59,6 @@ def estConnecte()-> bool:
     except OSError:
        pass
     return False
-
 
 def h_restantCalcul() -> datetime.timedelta: 
     """
@@ -88,15 +95,22 @@ def h_avantP_calcul() -> datetime.timedelta:
     """
     jourdelasemaine = datetime.datetime.today().weekday()
     jourouvrables = joursOuvrables()
+
     if jourdelasemaine not in jourouvrables:
         h_avantP = 0
+
     else:
-        if recolteH.heureActuelle < '12:00:00': # si c'est le matin
-            h_avantP = recolteH.d5 - recolteH.d1
-    
+        if recolteH.heureActuelle < getMidi(): # si c'est le matin
+            if recolteH.heureActuelle < recupHoraires()["matin"]["pause"]:
+                h_avantP = recolteH.d5 - recolteH.d1
+            else :
+                h_avantP = 0
            
-        elif recolteH.heureActuelle > '12:00:00': # si c'est l'après-midi
-            h_avantP = recolteH.d7 - recolteH.d1
+        elif recolteH.heureActuelle > getMidi(): # si c'est l'après-midi
+            if recolteH.heureActuelle < recupHoraires()["apres-midi"]["pause"]:
+                h_avantP = recolteH.d7 - recolteH.d1
+            else :
+                h_avantP = 0
        
 
     return h_avantP
