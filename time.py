@@ -30,6 +30,15 @@ def recupHoraires() -> dict:
         }}
     return data["horaires"]
 
+def joursOuvrables() -> list[int]:
+    try:
+        with open("horaires.json", "r") as fichier:
+                data = json.load(fichier)
+    except:
+        data = {"jours-ouvrables" : [0, 1, 2, 3, 4]}
+
+    return data["jours-ouvrables"]
+
 
 def estConnecte()-> bool:
     """
@@ -53,7 +62,7 @@ def h_restantCalcul() -> datetime.timedelta:
     """
 
     jourdelasemaine = datetime.datetime.today().weekday()
-    jourouvrables = [0, 1, 2, 3, 4]
+    jourouvrables = joursOuvrables()
 
     # détecter si on est la semaine
     if jourdelasemaine not in jourouvrables:
@@ -78,7 +87,7 @@ def h_avantP_calcul() -> datetime.timedelta:
     Retourne l'heure avant la pause
     """
     jourdelasemaine = datetime.datetime.today().weekday()
-    jourouvrables = [0, 1, 2, 3, 4]
+    jourouvrables = joursOuvrables()
     if jourdelasemaine not in jourouvrables:
         h_avantP = 0
     else:

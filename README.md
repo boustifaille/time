@@ -22,3 +22,6 @@ pip install pyfiglet
 
 ## Changes
 If you want to change the schedule open horaires.json and edit the file like you want
+
+## Future release
+Add a graphic interace with tkinter
