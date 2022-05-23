@@ -81,10 +81,10 @@ def h_restantCalcul() -> datetime.timedelta:
     else: # jours normaux
         # detecter si on est le matin ou l'après-midi et donnez le temps en conséquence
         if recolteH.heureActuelle > '12:00:00':
-            heureRestante = recolteH.d3-recolteH.d1
+            heureRestante = recolteH.finAP-recolteH.now
         else:
         
-            heureRestante = recolteH.d2-recolteH.d1
+            heureRestante = recolteH.finMatin-recolteH.now
     return heureRestante
 
 def h_avantP_calcul() -> datetime.timedelta:
@@ -102,13 +102,13 @@ def h_avantP_calcul() -> datetime.timedelta:
     else:
         if recolteH.heureActuelle < getMidi(): # si c'est le matin
             if recolteH.heureActuelle < recupHoraires()["matin"]["pause"]:
-                h_avantP = recolteH.d5 - recolteH.d1
+                h_avantP = recolteH.pauseMatin - recolteH.now
             else :
                 h_avantP = 0
            
         elif recolteH.heureActuelle > getMidi(): # si c'est l'après-midi
             if recolteH.heureActuelle < recupHoraires()["apres-midi"]["pause"]:
-                h_avantP = recolteH.d7 - recolteH.d1
+                h_avantP = recolteH.pauseAP - recolteH.now
             else :
                 h_avantP = 0
        
@@ -133,12 +133,12 @@ def recolteH():
     recolteH.heureActuelle = str(datetime.datetime.now().time().strftime('%H:%M:%S'))
 
     # formater proprement les heures
-    recolteH.d1 = datetime.datetime.strptime(recolteH.heureActuelle, '%H:%M:%S')# maintenat
-    recolteH.d2 = datetime.datetime.strptime(finMatin, '%H:%M:%S')    # fin matinée
-    recolteH.d3 = datetime.datetime.strptime(finAPmidi, '%H:%M:%S')    # fin après midi
+    recolteH.now = datetime.datetime.strptime(recolteH.heureActuelle, '%H:%M:%S')# maintenat
+    recolteH.finMatin = datetime.datetime.strptime(finMatin, '%H:%M:%S')    # fin matinée
+    recolteH.finAP = datetime.datetime.strptime(finAPmidi, '%H:%M:%S')    # fin après midi
 
-    recolteH.d5 = datetime.datetime.strptime(pauseMatin, '%H:%M:%S')    # Matin
-    recolteH.d7 = datetime.datetime.strptime(pauseAPmidi, '%H:%M:%S')    # Après-midi
+    recolteH.pauseMatin = datetime.datetime.strptime(pauseMatin, '%H:%M:%S')    # Matin
+    recolteH.pauseAP = datetime.datetime.strptime(pauseAPmidi, '%H:%M:%S')    # Après-midi
 
     # défini le temps restant
     heureRestante = h_restantCalcul()
