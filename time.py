@@ -7,7 +7,7 @@ import socket
 from threading import Thread
 import json
 
-def recupHoraires() -> dict:
+def getHoraires() -> dict:
     """
     Récupère les horaires de la journée depuis le fichier horaires.json
     Retourne un dictionnaire
@@ -70,20 +70,19 @@ def h_restantCalcul() -> datetime.timedelta:
 
     jourdelasemaine = datetime.datetime.today().weekday()
     jourouvrables = joursOuvrables()
+   
+    heureRestante = '00:00:00'
 
     # détecter si on est la semaine
     if jourdelasemaine not in jourouvrables:
         msg = "Il n'y a pas d'école aujourd'hui"
-        heureRestante = 0
     elif jourdelasemaine == 3: # si c'est jeudi
         msg = "T'es en matu"
-        heureRestante = 0
     else: # jours normaux
         # detecter si on est le matin ou l'après-midi et donnez le temps en conséquence
-        if recolteH.heureActuelle > '12:00:00':
+        if recolteH.heureActuelle > '12:00:00' and recolteH.heureActuelle < horaires["apres-midi"]["fin"]:
             heureRestante = recolteH.finAP-recolteH.now
-        else:
-        
+        elif recolteH.heureActuelle < '12:00:00' and recolteH.heureActuelle > horaires["matin"]["fin"]:
             heureRestante = recolteH.finMatin-recolteH.now
     return heureRestante
 
@@ -101,7 +100,7 @@ def h_avantP_calcul() -> datetime.timedelta:
 
     else:
         if recolteH.heureActuelle < getMidi(): # si c'est le matin
-            if recolteH.heureActuelle < recupHoraires()["matin"]["pause"]:
+            if recolteH.heureActuelle < horaires["matin"]["pause"]:
                 # c'est un timedelta il faut le convertir en datetime
                 h_avantP = recolteH.pauseMatin - recolteH.now
                 h_avantP = datetime.datetime.strptime(str(h_avantP), "%H:%M:%S")
@@ -110,7 +109,7 @@ def h_avantP_calcul() -> datetime.timedelta:
                 h_avantP = '00:00:00'
            
         elif recolteH.heureActuelle >= getMidi(): # si c'est l'après-midi
-            if recolteH.heureActuelle < recupHoraires()["apres-midi"]["pause"]:
+            if recolteH.heureActuelle < horaires["apres-midi"]["pause"]:
                 # c'est un timedelta il faut le convertir en datetime
                 h_avantP = recolteH.pauseAP - recolteH.now
                 h_avantP = datetime.datetime.strptime(str(h_avantP), "%H:%M:%S")
@@ -123,11 +122,10 @@ def h_avantP_calcul() -> datetime.timedelta:
     
 
 # affiche le temps restant
-def recolteH():
+def recolteH() -> str:
     """
     Recolte les heures les formatte et les affiche
     """
-    horaires = recupHoraires()
 
     pauseMatin = horaires["matin"]["pause"]
     finMatin = horaires["matin"]["fin"]
@@ -182,4 +180,5 @@ if __name__ == '__main__':
         except ModuleNotFoundError:
             os.system("pip install pyfiglet" if sys.platform == "Win32" or "win32" or "win64" or "Win64" else "sudo apt install python3-pyfiglet")
             from pyfiglet import Figlet
+    horaires = getHoraires()
     main()
