@@ -4,8 +4,13 @@ import datetime
 import os, sys
 import time
 import socket
-from threading import Thread
 import json
+
+"""
+TODO 
+- gestion des erreurs genre si la pause est deja passée
+- trouver un meilleure moyen de passer les variables que avec 'recolteH.'
+"""
 
 def getHoraires() -> dict:
     """
@@ -14,9 +19,9 @@ def getHoraires() -> dict:
     """
     try:
         with open("horaires.json", "r") as fichier:
-            data = json.load(fichier)
+            data = json.load(fichier)["horaires"]
     except:
-        data = {"horaires":{
+        data = {
             "matin":{
                 "debut":"08:00:00",
                 "pause":"10:00:00",
@@ -27,28 +32,28 @@ def getHoraires() -> dict:
                 "pause":"16:00:00",
                 "fin":"18:00:00"
             }
-        }}
-    return data["horaires"]
+        }
+    return data
 
 def joursOuvrables() -> list[int]:
     try:
         with open("horaires.json", "r") as fichier:
-                data = json.load(fichier)
+                data = json.load(fichier)["jours-ouvrables"]
     except:
-        data = {"jours-ouvrables" : [0, 1, 2, 3, 4]}
+        data = [0, 1, 2, 3, 4]
 
-    return data["jours-ouvrables"]
+    return data
 
 def getMidi() -> str:
     try:
         with open("horaires.json", "r") as fichier:
-                data = json.load(fichier)
+                data = json.load(fichier)["midi"]
     except:
-        data = {"midi" : "12:00:00"}
+        data = "12:00:00"
 
-    return data["midi"]
+    return data
 
-def estConnecte()-> bool:
+def estConnecte() -> bool:
     """
     Retourne simplement si on est connecté à internet ou non.
     Retourne un booléen
@@ -76,47 +81,49 @@ def h_restantCalcul() -> datetime.timedelta:
     # détecter si on est la semaine
     if jourdelasemaine not in jourouvrables:
         msg = "Il n'y a pas d'école aujourd'hui"
-    elif jourdelasemaine == 3: # si c'est jeudi
+    elif jourdelasemaine == 2: # si c'est mercredi
         msg = "T'es en matu"
     else: # jours normaux
         # detecter si on est le matin ou l'après-midi et donnez le temps en conséquence
-        if recolteH.heureActuelle > '12:00:00' and recolteH.heureActuelle < horaires["apres-midi"]["fin"]:
-            heureRestante = recolteH.finAP-recolteH.now
-        elif recolteH.heureActuelle < '12:00:00' and recolteH.heureActuelle > horaires["matin"]["fin"]:
-            heureRestante = recolteH.finMatin-recolteH.now
+        if recolteH.heureActuelle > getMidi() and recolteH.heureActuelle < horaires["apres-midi"]["fin"]:
+            heureRestante = recolteH.finAP - recolteH.now
+        elif recolteH.heureActuelle < getMidi() and recolteH.heureActuelle > horaires["matin"]["fin"]:
+            heureRestante = recolteH.finMatin - recolteH.now
+            
     return heureRestante
 
-def h_avantP_calcul() -> datetime.timedelta:
+def h_avantP_calcul() -> str:
     """
     Calcul le temps avant la pause
     Partage variables avec recoltH
     Retourne l'heure avant la pause
+    TODO trouver un moyen d'afficher les erreurs pour l'instant retourne '00:00:00'
     """
     jourdelasemaine = datetime.datetime.today().weekday()
     jourouvrables = joursOuvrables()
 
     if jourdelasemaine not in jourouvrables:
-        h_avantP = 0
+        # TODO trouver un moyen d'afficher les erreurs
+        return '00:00:00'
 
-    else:
-        if recolteH.heureActuelle < getMidi(): # si c'est le matin
-            if recolteH.heureActuelle < horaires["matin"]["pause"]:
-                # c'est un timedelta il faut le convertir en datetime
-                h_avantP = recolteH.pauseMatin - recolteH.now
-                h_avantP = datetime.datetime.strptime(str(h_avantP), "%H:%M:%S")
-                h_avantP = h_avantP.strftime("%H:%M:%S")
-            else :
-                h_avantP = '00:00:00'
-           
-        elif recolteH.heureActuelle >= getMidi(): # si c'est l'après-midi
-            if recolteH.heureActuelle < horaires["apres-midi"]["pause"]:
-                # c'est un timedelta il faut le convertir en datetime
-                h_avantP = recolteH.pauseAP - recolteH.now
-                h_avantP = datetime.datetime.strptime(str(h_avantP), "%H:%M:%S")
-                h_avantP = h_avantP.strftime("%H:%M:%S")
-            else :
-                h_avantP = '00:00:00'
-       
+
+    if recolteH.heureActuelle < getMidi(): # si c'est le matin
+        if recolteH.heureActuelle > horaires["matin"]["pause"]: # la pause est deja passée
+            return '00:00:00'
+        
+        # c'est un timedelta il faut le convertir en datetime
+        h_avantP = recolteH.pauseMatin - recolteH.now
+        h_avantP = datetime.datetime.strptime(str(h_avantP), "%H:%M:%S")
+        h_avantP = h_avantP.strftime("%H:%M:%S")
+        
+    else : # si c'est l'après-midi
+        if recolteH.heureActuelle > horaires["apres-midi"]["pause"]: # la pause est deja passée
+            return '00:00:00'
+        
+        # c'est un timedelta il faut le convertir en datetime
+        h_avantP = recolteH.pauseAP - recolteH.now
+        h_avantP = datetime.datetime.strptime(str(h_avantP), "%H:%M:%S")
+        h_avantP = h_avantP.strftime("%H:%M:%S")
 
     return h_avantP
     
@@ -124,7 +131,7 @@ def h_avantP_calcul() -> datetime.timedelta:
 # affiche le temps restant
 def recolteH() -> str:
     """
-    Recolte les heures les formatte et les affiche
+    Recolte les heures et les formatte
     """
 
     pauseMatin = horaires["matin"]["pause"]
@@ -150,15 +157,16 @@ def recolteH() -> str:
     # temps restant avant la pause
     h_avantP = h_avantP_calcul()
 
-    # Le montrer à l'utilisateur
+    # Le formatter dans une string
     try:
         font = 'digital'
         f=Figlet(font)
         msg = f.renderText('Il reste : ' + str(heureRestante))
-        msg = msg + f.renderText('Et ' + str(h_avantP) + ' avant la pause')
+        msg += f.renderText('Et ' + str(h_avantP) + ' avant la pause')
     except:
         msg = 'Il reste : '+str(heureRestante)
-        msg = msg + '\nEt ' + str(h_avantP) + ' avant la pause'
+        msg += '\nEt ' + str(h_avantP) + ' avant la pause'
+
     return msg
         
 def main():
@@ -174,11 +182,11 @@ def main():
 
 if __name__ == '__main__':
     # si pyfiglet n'est pas installé le faire
-    if estConnecte():
-        try:
-            from pyfiglet import Figlet
-        except ModuleNotFoundError:
-            os.system("pip install pyfiglet" if sys.platform == "Win32" or "win32" or "win64" or "Win64" else "sudo apt install python3-pyfiglet")
+    try:
+        from pyfiglet import Figlet
+    except ModuleNotFoundError:
+        if estConnecte():
+            os.system("pip install pyfiglet")
             from pyfiglet import Figlet
     horaires = getHoraires()
     main()
